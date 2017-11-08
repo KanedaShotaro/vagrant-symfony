@@ -2,7 +2,10 @@
 echo "--- Install zip ---"
 sudo apt-get -y install zip
 echo "--- Install phpunit ---"
-sudo apt-get -y install phpunit
+#sudo apt-get -y install phpunit
+wget https://phar.phpunit.de/phpunit.phar
+chmod +x phpunit.phar
+sudo mv phpunit.phar /usr/local/bin/phpunit
 #echo "--- remove cache and logs ---"
 #sudo rm -fr var/cache/*
 #sudo rm -fr var/logs/*
@@ -18,3 +21,4 @@ sudo apt-get -y install phpunit
 #php bin/console cache:clear
 #php bin/console cache:clear --env prod
 #php bin/console assets:install --symlink
+
