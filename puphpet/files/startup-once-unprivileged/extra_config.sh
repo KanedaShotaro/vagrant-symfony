@@ -21,4 +21,3 @@ sudo mv phpunit.phar /usr/local/bin/phpunit
 #php bin/console cache:clear
 #php bin/console cache:clear --env prod
 #php bin/console assets:install --symlink
-

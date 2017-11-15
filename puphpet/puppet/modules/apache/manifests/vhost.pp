@@ -34,6 +34,9 @@ define apache::vhost(
   $ssl_options                 = undef,
   $ssl_openssl_conf_cmd        = undef,
   $ssl_proxyengine             = false,
+  $ssl_stapling                = undef,
+  $ssl_stapling_timeout        = undef,
+  $ssl_stapling_return_errors  = undef,
   $priority                    = undef,
   $default_vhost               = false,
   $servername                  = $name,
@@ -61,6 +64,9 @@ define apache::vhost(
   $error_log_file              = undef,
   $error_log_pipe              = undef,
   $error_log_syslog            = undef,
+  $modsec_audit_log            = undef,
+  $modsec_audit_log_file       = undef,
+  $modsec_audit_log_pipe       = undef,
   $error_documents             = [],
   $fallbackresource            = undef,
   $scriptalias                 = undef,
@@ -97,6 +103,7 @@ define apache::vhost(
   $rewrite_base                = undef,
   $rewrite_rule                = undef,
   $rewrite_cond                = undef,
+  $rewrite_inherit             = false,
   $setenv                      = [],
   $setenvif                    = [],
   $setenvifnocase              = [],
@@ -108,6 +115,7 @@ define apache::vhost(
   $wsgi_import_script          = undef,
   $wsgi_import_script_options  = undef,
   $wsgi_process_group          = undef,
+  $wsgi_script_aliases_match   = undef,
   $wsgi_script_aliases         = undef,
   $wsgi_pass_authorization     = undef,
   $wsgi_chunked_request        = undef,
@@ -131,6 +139,9 @@ define apache::vhost(
   $passenger_pre_start         = undef,
   $passenger_user              = undef,
   $passenger_high_performance  = undef,
+  $passenger_nodejs            = undef,
+  $passenger_sticky_sessions   = undef,
+  $passenger_startup_file      = undef,
   $add_default_charset         = undef,
   $modsec_disable_vhost        = undef,
   $modsec_disable_ids          = undef,
@@ -152,6 +163,13 @@ define apache::vhost(
   $keepalive                   = undef,
   $keepalive_timeout           = undef,
   $max_keepalive_requests      = undef,
+  $cas_attribute_prefix        = undef,
+  $cas_attribute_delimiter     = undef,
+  $cas_scrub_request_headers   = undef,
+  $cas_sso_enabled             = undef,
+  $cas_login_url               = undef,
+  $cas_validate_url            = undef,
+  $cas_validate_saml           = undef,
 ) {
   # The base class must be included first because it is used by parameter defaults
   if ! defined(Class['apache']) {
@@ -169,13 +187,20 @@ define apache::vhost(
   validate_bool($ip_based)
   validate_bool($access_log)
   validate_bool($error_log)
+  if $modsec_audit_log != undef {
+    validate_bool($modsec_audit_log)
+  }
   validate_bool($ssl)
   validate_bool($default_vhost)
   validate_bool($ssl_proxyengine)
+  if $ssl_stapling != undef {
+    validate_bool($ssl_stapling)
+  }
   if $rewrites {
     validate_array($rewrites)
     unless empty($rewrites) {
-      validate_hash($rewrites[0])
+      $rewrites_flattened = delete_undef_values(flatten([$rewrites]))
+      validate_hash($rewrites_flattened[0])
     }
   }
 
@@ -192,6 +217,12 @@ define apache::vhost(
     Allowed values are 'on' and 'off'.")
   }
 
+  if $wsgi_chunked_request {
+    validate_re(downcase($wsgi_chunked_request), '^(on|off)$',
+    "${wsgi_chunked_request} is not supported for wsgi_chunked_request.
+    Allowed values are 'on' and 'off'.")
+  }
+
   # Deprecated backwards-compatibility
   if $rewrite_base {
     warning('Apache::Vhost: parameter rewrite_base is deprecated in favor of rewrites')
@@ -205,6 +236,9 @@ define apache::vhost(
 
   if $wsgi_script_aliases {
     validate_hash($wsgi_script_aliases)
+  }
+  if $wsgi_script_aliases_match {
+    validate_hash($wsgi_script_aliases_match)
   }
   if $wsgi_daemon_process_options {
     validate_hash($wsgi_daemon_process_options)
@@ -230,6 +264,10 @@ define apache::vhost(
 
   if $error_log_file and $error_log_pipe {
     fail("Apache::Vhost[${name}]: 'error_log_file' and 'error_log_pipe' cannot be defined at the same time")
+  }
+
+  if $modsec_audit_log_file and $modsec_audit_log_pipe {
+    fail("Apache::Vhost[${name}]: 'modsec_audit_log_file' and 'modsec_audit_log_pipe' cannot be defined at the same time")
   }
 
   if $fallbackresource {
@@ -271,6 +309,10 @@ define apache::vhost(
     validate_re($keepalive,'(^on$|^off$)',"${keepalive} is not permitted for keepalive. Allowed values are 'on' or 'off'.")
   }
 
+  if $passenger_sticky_sessions {
+    validate_bool($passenger_sticky_sessions)
+  }
+
   # Input validation ends
 
   if $ssl and $ensure == 'present' {
@@ -295,7 +337,7 @@ define apache::vhost(
     include ::apache::mod::suexec
   }
 
-  if $passenger_app_root or $passenger_app_env or $passenger_ruby or $passenger_min_instances or $passenger_start_timeout or $passenger_pre_start or $passenger_user or $passenger_high_performance {
+  if $passenger_app_root or $passenger_app_env or $passenger_ruby or $passenger_min_instances or $passenger_start_timeout or $passenger_pre_start or $passenger_user or $passenger_high_performance or $passenger_nodejs or $passenger_sticky_sessions or $passenger_startup_file {
     include ::apache::mod::passenger
   }
 
@@ -345,6 +387,9 @@ define apache::vhost(
   # Is apache::mod::shib enabled (or apache::mod['shib2'])
   $shibboleth_enabled = defined(Apache::Mod['shib2'])
 
+  # Is apache::mod::cas enabled (or apache::mod['cas'])
+  $cas_enabled = defined(Apache::Mod['auth_cas'])
+
   if $access_log and !$access_logs {
     if $access_log_file {
       $_logs_dest = "${logroot}/${access_log_file}"
@@ -383,6 +428,23 @@ define apache::vhost(
     }
   }
 
+  if $modsec_audit_log == false {
+    $modsec_audit_log_destination = undef
+  } elsif $modsec_audit_log_file {
+    $modsec_audit_log_destination = "${logroot}/${modsec_audit_log_file}"
+  } elsif $modsec_audit_log_pipe {
+    $modsec_audit_log_destination = $modsec_audit_log_pipe
+  } elsif $modsec_audit_log {
+    if $ssl {
+      $modsec_audit_log_destination = "${logroot}/${name}_security_ssl.log"
+    } else {
+      $modsec_audit_log_destination = "${logroot}/${name}_security.log"
+    }
+  } else {
+    $modsec_audit_log_destination = undef
+  }
+
+
   if $ip {
     $_ip = enclose_ipv6($ip)
     if $port {
@@ -402,7 +464,7 @@ define apache::vhost(
     } else {
       $listen_addr_port = undef
       $nvh_addr_port = $name
-      if ! $servername {
+      if ! $servername and $servername != '' {
         fail("Apache::Vhost[${name}]: must pass 'ip' and/or 'port' parameters, and/or 'servername' parameter")
       }
     }
@@ -478,11 +540,19 @@ define apache::vhost(
     }
   }
 
+  # Check if mod_env is required and not yet loaded.
+  # create an expression to simplify the conditional check
+  $use_env_mod = $setenv and ! empty($setenv)
+  if ($use_env_mod) {
+    if ! defined(Class['apache::mod::env']) {
+      include ::apache::mod::env
+    }
+  }
   # Check if mod_setenvif is required and not yet loaded.
   # create an expression to simplify the conditional check
-  $use_setenv_mod = ($setenv and ! empty($setenv)) or ($setenvif and ! empty($setenvif)) or ($setenvifnocase and ! empty($setenvifnocase))
+  $use_setenvif_mod = ($setenvif and ! empty($setenvif)) or ($setenvifnocase and ! empty($setenvifnocase))
 
-  if ($use_setenv_mod) {
+  if ($use_setenvif_mod) {
     if ! defined(Class['apache::mod::setenvif']) {
       include ::apache::mod::setenvif
     }
@@ -846,7 +916,7 @@ define apache::vhost(
   # Template uses:
   # - $setenv
   # - $setenvif
-  if ($use_setenv_mod) {
+  if ($use_env_mod or $use_setenvif_mod) {
     concat::fragment { "${name}-setenv":
       target  => "${priority_real}${filename}.conf",
       order   => 220,
@@ -871,6 +941,7 @@ define apache::vhost(
   # - $ssl_verify_depth
   # - $ssl_options
   # - $ssl_openssl_conf_cmd
+  # - $ssl_stapling
   # - $apache_version
   if $ssl {
     concat::fragment { "${name}-ssl":
@@ -1005,7 +1076,10 @@ define apache::vhost(
   # - $passenger_start_timeout
   # - $passenger_pre_start
   # - $passenger_user
-  if $passenger_app_root or $passenger_app_env or $passenger_ruby or $passenger_min_instances or $passenger_start_timeout or $passenger_pre_start or $passenger_user {
+  # - $passenger_nodejs
+  # - $passenger_sticky_sessions
+  # - $passenger_startup_file
+  if $passenger_app_root or $passenger_app_env or $passenger_ruby or $passenger_min_instances or $passenger_start_timeout or $passenger_pre_start or $passenger_user or $passenger_nodejs or $passenger_sticky_sessions or $passenger_startup_file{
     concat::fragment { "${name}-passenger":
       target  => "${priority_real}${filename}.conf",
       order   => 300,
@@ -1030,11 +1104,12 @@ define apache::vhost(
   # - $modsec_disable_msgs
   # - $modsec_disable_tags
   # - $modsec_body_limit
-  if $modsec_disable_vhost or $modsec_disable_ids or $modsec_disable_ips or $modsec_disable_msgs or $modsec_disable_tags {
+  # - $modsec_audit_log_destination
+  if $modsec_disable_vhost or $modsec_disable_ids or $modsec_disable_ips or $modsec_disable_msgs or $modsec_disable_tags or $modsec_audit_log_destination {
     concat::fragment { "${name}-security":
       target  => "${priority_real}${filename}.conf",
       order   => 320,
-      content => template('apache/vhost/_security.erb')
+      content => template('apache/vhost/_security.erb'),
     }
   }
 
@@ -1067,6 +1142,16 @@ define apache::vhost(
       target  => "${priority_real}${filename}.conf",
       order   => 350,
       content => template('apache/vhost/_keepalive_options.erb'),
+    }
+  }
+
+  # Template uses:
+  # - $cas_*
+  if $cas_enabled {
+    concat::fragment { "${name}-auth_cas":
+      target  => "${priority_real}${filename}.conf",
+      order   => 350,
+      content => template('apache/vhost/_auth_cas.erb'),
     }
   }
 

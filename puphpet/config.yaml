@@ -3,8 +3,8 @@ vagrantfile:
     vm:
         provider:
             local:
-                box: puphpet/ubuntu1404-x64
-                box_url: puphpet/ubuntu1404-x64
+                box: puphpet/ubuntu1604-x64
+                box_url: 'false'
                 box_version: '0'
                 chosen_virtualizer: virtualbox
                 virtualizers:
@@ -19,14 +19,14 @@ vagrantfile:
                         check_guest_tools: 0
                         update_guest_tools: 0
                 machines:
-                    vflm_fb3l776c5rwv:
+                    vflm_htu4y5eaw0mw:
                         id: symfony
                         hostname: symfony.puphpet
                         network:
                             private_network: 10.10.10.10
                             forwarded_port:
-                                vflmnfp_c81da4yxekvw:
-                                    host: '5288'
+                                vflmnfp_0tc4x8yx5g9n:
+                                    host: '6973'
                                     guest: '22'
                         memory: '2048'
                         cpus: '1'
@@ -40,7 +40,9 @@ vagrantfile:
                     - '--verbose'
                     - '--hiera_config /vagrant/puphpet/puppet/hiera.yaml'
         synced_folder:
-            vflsf_dyfm12jxzdgh:
+            vflsf_1v0bgct08cx5:
+                owner: www-data
+                group: www-data
                 source: ./
                 target: /var/www
                 sync_type: nfs
@@ -60,8 +62,6 @@ vagrantfile:
                         - .vagrant/
                         - .git/
                     auto: 'true'
-                owner: www-data
-                group: www-data
         usable_port_range:
             start: 10200
             stop: 10500
@@ -86,7 +86,9 @@ vagrantfile:
         no_proxy: ''
 server:
     install: '1'
-    packages: {  }
+    packages:
+        - vim
+        - htop
 users_groups:
     install: '1'
     groups: {  }
@@ -98,11 +100,17 @@ locale:
         locales:
             - en_GB.UTF-8
             - en_US.UTF-8
-            - es_ES.UTF-8
         timezone: UTC
 firewall:
     install: '1'
     rules: {  }
+resolv:
+    install: '1'
+    nameservers:
+        - 8.8.8.8
+        - 8.8.4.4
+    domainname: ''
+    searchpath: {  }
 cron:
     install: '1'
     jobs: {  }
@@ -187,17 +195,14 @@ apache:
             servername: symfony.dev
             docroot: /var/www/web
             port: '80'
-            setenv:
-                - 'APP_ENV dev'
-                - 'APP_DEBUG true'
             setenvif:
                 - 'Authorization "(.*)" HTTP_AUTHORIZATION=$1'
             custom_fragment: ''
             ssl: '0'
-            ssl_cert: ''
-            ssl_key: ''
-            ssl_chain: ''
-            ssl_certs_dir: ''
+            ssl_cert: LETSENCRYPT
+            ssl_key: LETSENCRYPT
+            ssl_chain: LETSENCRYPT
+            ssl_certs_dir: LETSENCRYPT
             ssl_protocol: ''
             ssl_cipher: ''
             directories:
@@ -229,11 +234,12 @@ letsencrypt:
     install: '1'
     settings:
         email: ''
+        webserver_service: ''
     domains: {  }
 php:
     install: '1'
     settings:
-        version: '7.0'
+        version: '7.1'
     modules:
         php:
             - cli
@@ -260,6 +266,7 @@ php:
         serialize_precision: '17'
         zend.enable_gc: 'On'
         expose_php: 'On'
+        allow_url_fopen: 'On'
         memory_limit: '-1'
         upload_max_filesize: 20M
     fpm_ini:

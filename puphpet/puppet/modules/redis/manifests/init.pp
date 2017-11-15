@@ -175,6 +175,11 @@
 #
 #   Default: false
 #
+# [*manage_package*]
+#   Enable/disable management of package
+#
+#   Default: true
+#
 # [*masterauth*]
 #   If the master is password protected (using the "requirepass" configuration
 #   directive below) it is possible to tell the slave to authenticate before
@@ -309,6 +314,16 @@
 #   Set if save db to disk.
 #
 #   Default: true
+#
+#[*save_db_to_disk_interval*]
+#    save the dataset every N seconds if there are at least M changes in the dataset
+#
+#   Default: {'900' =>'1', '300' => '10', '60' => '10000'}
+#
+#   Produces in config file;
+#           save 900 1
+#           save 300 10
+#           save 60 10000
 #
 # [*service_manage*]
 #   Specify if the service should be part of the catalog.
@@ -466,6 +481,11 @@
 #
 #   Default: /var/lib/redis/
 #
+# [*workdir_mode*]
+#   Adjust mode for data directory.
+#
+#   Default: 0750
+#
 # [*zset_max_ziplist_entries*]
 #   Set max entries for sorted sets.
 #
@@ -537,6 +557,7 @@ class redis (
   $log_dir_mode                  = $::redis::params::log_dir_mode,
   $log_file                      = $::redis::params::log_file,
   $log_level                     = $::redis::params::log_level,
+  $manage_package                = $::redis::params::manage_package,
   $manage_repo                   = $::redis::params::manage_repo,
   $masterauth                    = $::redis::params::masterauth,
   $maxclients                    = $::redis::params::maxclients,
@@ -561,6 +582,7 @@ class redis (
   $repl_timeout                  = $::redis::params::repl_timeout,
   $requirepass                   = $::redis::params::requirepass,
   $save_db_to_disk               = $::redis::params::save_db_to_disk,
+  $save_db_to_disk_interval      = $::redis::params::save_db_to_disk_interval,
   $service_enable                = $::redis::params::service_enable,
   $service_ensure                = $::redis::params::service_ensure,
   $service_group                 = $::redis::params::service_group,
@@ -587,6 +609,7 @@ class redis (
   $unixsocketperm                = $::redis::params::unixsocketperm,
   $ulimit                        = $::redis::params::ulimit,
   $workdir                       = $::redis::params::workdir,
+  $workdir_mode                  = $::redis::params::workdir_mode,
   $zset_max_ziplist_entries      = $::redis::params::zset_max_ziplist_entries,
   $zset_max_ziplist_value        = $::redis::params::zset_max_ziplist_value,
   $cluster_enabled               = $::redis::params::cluster_enabled,
@@ -596,10 +619,10 @@ class redis (
   anchor { 'redis::begin': }
   anchor { 'redis::end': }
 
-  include redis::preinstall
-  include redis::install
-  include redis::config
-  include redis::service
+  include ::redis::preinstall
+  include ::redis::install
+  include ::redis::config
+  include ::redis::service
 
   if $::redis::notify_service {
     Anchor['redis::begin'] ->

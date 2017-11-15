@@ -114,9 +114,9 @@ databases <%= @databases %>
 #
 #   save ""
 <% if @save_db_to_disk %>
-save 900 1
-save 300 10
-save 60 10000
+<%- @save_db_to_disk_interval.sort_by{}.each do |seconds, key_change| -%>
+save <%= seconds -%> <%= key_change -%> <%= "\n" -%>
+<%- end -%>
 <% end %>
 # By default Redis will stop accepting writes if RDB snapshots are enabled
 # (at least one save point) and the latest background save failed.
@@ -149,7 +149,7 @@ rdbcompression <% if @rdbcompression -%>yes<% else -%>no<% end %>
 rdbchecksum yes
 
 # The filename where to dump the DB
-dbfilename <%= @dbfilename %>
+<% if @dbfilename %>dbfilename <%= @dbfilename %><% else %># dbfilename dump.rdb<% end %>
 
 # The working directory.
 #

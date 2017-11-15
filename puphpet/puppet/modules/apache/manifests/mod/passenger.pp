@@ -14,10 +14,12 @@ class apache::mod::passenger (
   $passenger_default_ruby           = $::apache::params::passenger_default_ruby,
   $passenger_max_pool_size          = undef,
   $passenger_min_instances          = undef,
+  $passenger_max_instances_per_app  = undef,
   $passenger_use_global_queue       = undef,
   $passenger_app_env                = undef,
   $passenger_log_file               = undef,
   $passenger_log_level              = undef,
+  $passenger_data_buffer_dir        = undef,
   $manage_repo                      = true,
   $mod_package                      = undef,
   $mod_package_ensure               = undef,
@@ -55,9 +57,15 @@ class apache::mod::passenger (
   }
 
   if $::osfamily == 'RedHat' and $manage_repo {
+    if $::operatingsystem == 'Amazon' {
+      $baseurl = 'https://oss-binaries.phusionpassenger.com/yum/passenger/el/6Server/$basearch'
+    } else {
+      $baseurl = 'https://oss-binaries.phusionpassenger.com/yum/passenger/el/$releasever/$basearch'
+    }
+
     yumrepo { 'passenger':
       ensure        => 'present',
-      baseurl       => 'https://oss-binaries.phusionpassenger.com/yum/passenger/el/$releasever/$basearch',
+      baseurl       => $baseurl,
       descr         => 'passenger',
       enabled       => '1',
       gpgcheck      => '0',
@@ -69,16 +77,18 @@ class apache::mod::passenger (
     }
   }
 
-  $_id = $mod_id
-  $_path = $mod_path
-  ::apache::mod { 'passenger':
-    package        => $_package,
-    package_ensure => $_package_ensure,
-    lib            => $_lib,
-    lib_path       => $_lib_path,
-    id             => $_id,
-    path           => $_path,
-    loadfile_name  => 'zpassenger.load',
+  unless ($::operatingsystem == 'SLES') {
+    $_id = $mod_id
+    $_path = $mod_path
+    ::apache::mod { 'passenger':
+      package        => $_package,
+      package_ensure => $_package_ensure,
+      lib            => $_lib,
+      lib_path       => $_lib_path,
+      id             => $_id,
+      path           => $_path,
+      loadfile_name  => 'zpassenger.load',
+    }
   }
 
   # Template uses:
@@ -87,6 +97,7 @@ class apache::mod::passenger (
   # - $passenger_default_ruby
   # - $passenger_max_pool_size
   # - $passenger_min_instances
+  # - $passenger_max_instances_per_app
   # - $passenger_high_performance
   # - $passenger_max_requests
   # - $passenger_spawn_method
@@ -95,6 +106,7 @@ class apache::mod::passenger (
   # - $passenger_log_file
   # - $passenger_log_level
   # - $passenger_app_env
+  # - $passenger_data_buffer_dir
   # - $rack_autodetect
   # - $rails_autodetect
   file { 'passenger.conf':

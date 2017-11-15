@@ -47,6 +47,7 @@ class redis::config {
   $repl_timeout                  = $::redis::repl_timeout
   $requirepass                   = $::redis::requirepass
   $save_db_to_disk               = $::redis::save_db_to_disk
+  $save_db_to_disk_interval      = $::redis::save_db_to_disk_interval
   $set_max_intset_entries        = $::redis::set_max_intset_entries
   $slave_priority                = $::redis::slave_priority
   $slave_read_only               = $::redis::slave_read_only
@@ -71,7 +72,7 @@ class redis::config {
       owner  => $::redis::config_owner,
       group  => $::redis::config_group,
       mode   => $::redis::config_file_mode,
-      notify => Service[$::redis::service_name]
+      notify => Service[$::redis::service_name],
     }
   } else {
     File {
@@ -95,6 +96,12 @@ class redis::config {
       group  => $::redis::service_group,
       mode   => $::redis::log_dir_mode,
       owner  => $::redis::service_user;
+
+    $::redis::workdir:
+      ensure => directory,
+      group  => $::redis::service_group,
+      mode   => $::redis::workdir_mode,
+      owner  => $::redis::service_user;
   }
 
   exec {
@@ -114,6 +121,13 @@ class redis::config {
         owner  => $::redis::config_owner,
       }
 
+      file { '/var/run/redis':
+        ensure => 'directory',
+        owner  => $::redis::config_owner,
+        group  => $::redis::config_group,
+        mode   => '0755',
+      }
+
       if $::redis::ulimit {
         augeas { 'redis ulimit' :
           context => '/files/etc/default/redis-server',
@@ -126,4 +140,3 @@ class redis::config {
     }
   }
 }
-
