@@ -15,18 +15,18 @@ class puphpet::server {
     }
   }
 
-  case $puphpet::params::ssh_username {
+  case $::ssh_username {
     'root': {
       $user_home   = '/root'
       $manage_home = false
     }
     default: {
-      $user_home   = "/home/${puphpet::params::ssh_username}"
+      $user_home   = "/home/${::ssh_username}"
       $manage_home = true
     }
   }
 
-  @user { $puphpet::params::ssh_username:
+  @user { $::ssh_username:
     ensure     => present,
     shell      => '/bin/bash',
     home       => $user_home,
@@ -35,7 +35,7 @@ class puphpet::server {
     require    => [Group['www-data'], Group['www-user']],
   }
 
-  realize(User[$puphpet::params::ssh_username])
+  realize(User[$::ssh_username])
 
   each( ['apache', 'nginx', 'httpd', 'www-data', 'www-user'] ) |$key| {
     if ! defined(User[$key]) {
@@ -49,8 +49,14 @@ class puphpet::server {
   }
 
   # copy dot files to ssh user's home directory
-  if ! defined(Puphpet::Server::Link_dotfiles[$puphpet::params::ssh_username]) {
-    puphpet::server::link_dotfiles { $puphpet::params::ssh_username: }
+  exec { 'dotfiles':
+    cwd     => $user_home,
+    command => "cp -r /vagrant/puphpet/files/dot/.[a-zA-Z0-9]* ${user_home}/ && \
+                chown -R ${::ssh_username} ${user_home}/.[a-zA-Z0-9]* && \
+                cp -r /vagrant/puphpet/files/dot/.[a-zA-Z0-9]* /root/",
+    onlyif  => 'test -d /vagrant/puphpet/files/dot',
+    returns => [0, 1],
+    require => User[$::ssh_username]
   }
 
   case $::osfamily {

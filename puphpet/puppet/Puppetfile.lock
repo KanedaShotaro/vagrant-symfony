@@ -14,11 +14,11 @@ FORGE
 
 GIT
   remote: https://github.com/arioch/puppet-redis.git
-  ref: 1.2.4
-  sha: 05c9d2d8893682f7355f82faa2faf8d08783fab5
+  ref: 1.2.3
+  sha: 6abc4f4ffbe718ed964a9672b3e75f3a88fc916d
   specs:
-    arioch-redis (1.2.4)
-      puppetlabs-apt (< 3.0.0, >= 2.3.0)
+    arioch-redis (1.2.3)
+      puppetlabs-apt (< 3.0.0, >= 2.0.1)
       puppetlabs-stdlib (< 5.0.0, >= 1.0.2)
       stahnma-epel (< 2.0.0, >= 1.0.2)
 
@@ -123,8 +123,8 @@ GIT
 
 GIT
   remote: https://github.com/puphpet/puppet-puphpet.git
-  ref: 1da870cfbf65d6309fc0c72dd31124c0155612e5
-  sha: 1da870cfbf65d6309fc0c72dd31124c0155612e5
+  ref: 41673b8258517bdb920bcf992eefce99d2a3544a
+  sha: 41673b8258517bdb920bcf992eefce99d2a3544a
   specs:
     puphpet-puphpet (0.0.1)
 
@@ -147,10 +147,10 @@ GIT
 
 GIT
   remote: https://github.com/puppetlabs/puppetlabs-apache.git
-  ref: 1.11.0
-  sha: 91bed86590382beb85707025fb7570284a5965a1
+  ref: 1.10.0
+  sha: 410309f5facd0df7d836ea66c27ca9514031b6e3
   specs:
-    puppetlabs-apache (1.11.0)
+    puppetlabs-apache (1.10.0)
       puppetlabs-concat (< 3.0.0, >= 1.1.1)
       puppetlabs-stdlib (< 5.0.0, >= 2.4.0)
 
@@ -203,8 +203,8 @@ GIT
 
 GIT
   remote: https://github.com/puppetlabs/puppetlabs-mysql.git
-  ref: 3.10.0
-  sha: 11afc2b7965d491abcc8e8aad31d70fbc82e0b3d
+  ref: 81c4fed35e65e285e334b30998b4e3eba662534c
+  sha: 81c4fed35e65e285e334b30998b4e3eba662534c
   specs:
     puppetlabs-mysql (3.9.0)
       puppet-staging (< 3.0.0, >= 1.0.1)
@@ -270,14 +270,6 @@ GIT
     attachmentgenie-locales (2.2.2)
 
 GIT
-  remote: https://github.com/saz/puppet-resolv_conf.git
-  ref: v3.1.0
-  sha: 211c2b5a98e2b339cc9631c999177f2784aef690
-  specs:
-    saz-resolv_conf (3.1.0)
-      puppetlabs-stdlib (>= 3.2.0)
-
-GIT
   remote: https://github.com/saz/puppet-timezone.git
   ref: v3.3.0
   sha: 734918982a512f51a3f1855396d2d7da3f37f53c
@@ -341,7 +333,6 @@ DEPENDENCIES
   puppetlabs-stdlib (>= 0)
   puppetlabs-vcsrepo (>= 0)
   s12v-blackfire (>= 0)
-  saz-resolv_conf (>= 0)
   saz-timezone (>= 0)
   tPl0ch-composer (>= 0)
   voxpupuli-archive (>= 0)

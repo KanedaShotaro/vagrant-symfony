@@ -1,5 +1,4 @@
 class apache::mod::autoindex {
-  include ::apache
   ::apache::mod { 'autoindex': }
   # Template uses no variables
   file { 'autoindex.conf':

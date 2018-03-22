@@ -34,18 +34,12 @@ describe 'apache::default_mods class' do
           default_mods => false,
         }
         apache::vhost { 'defaults.example.com':
-          docroot     => '#{$doc_root}/defaults',
-          aliases     => {
+          docroot => '/var/www/defaults',
+          aliases => {
             alias => '/css',
-            path  => '#{$doc_root}/css',
+            path  => '/var/www/css',
           },
-          directories => [
-	        {
-              'path'            => "#{$doc_root}/admin",
-              'auth_basic_fake' => 'demo demopass',
-            }
-          ],
-          setenv      => 'TEST1 one',
+          setenv  => 'TEST1 one',
         }
       EOS
 
@@ -71,10 +65,10 @@ describe 'apache::default_mods class' do
           ],
         }
         apache::vhost { 'defaults.example.com':
-          docroot => '#{$doc_root}/defaults',
+          docroot => '/var/www/defaults',
           aliases => {
             alias => '/css',
-            path  => '#{$doc_root}/css',
+            path  => '/var/www/css',
           },
           setenv  => 'TEST1 one',
         }

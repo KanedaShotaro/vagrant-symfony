@@ -34,7 +34,6 @@ define apache::vhost::custom(
       group   => $::apache::params::root_group,
       mode    => $::apache::file_mode,
       require => Apache::Custom_config[$filename],
-      notify  => Class['apache::service'],
     }
   }
 }

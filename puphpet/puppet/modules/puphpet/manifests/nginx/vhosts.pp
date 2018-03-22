@@ -123,16 +123,16 @@ define puphpet::nginx::vhosts (
       "${puphpet::nginx::params::webroot_location}/index.html"
 
     $default_vhost_source_file =
-      "${puphpet::params::puphpet_manifest_dir}/files/webserver_landing.html"
+      '/vagrant/puphpet/puppet/manifests/puphpet/files/webserver_landing.html'
 
     exec { "Set ${default_vhost_index_file} contents":
       command => "cat ${default_vhost_source_file} > ${default_vhost_index_file} && \
                   chmod 644 ${default_vhost_index_file} && \
                   chown root ${default_vhost_index_file} && \
                   chgrp ${puphpet::nginx::params::webroot_group} ${default_vhost_index_file} && \
-                  touch ${puphpet::params::puphpet_state_dir}/default_vhost_index_file_set",
+                  touch /.puphpet-stuff/default_vhost_index_file_set",
       returns => [0, 1],
-      creates => "${puphpet::params::puphpet_state_dir}/default_vhost_index_file_set",
+      creates => '/.puphpet-stuff/default_vhost_index_file_set',
       require => File[$puphpet::nginx::params::webroot_location],
     }
   }

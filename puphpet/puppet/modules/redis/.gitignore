@@ -6,6 +6,4 @@ Gemfile.lock
 doc
 log/
 pkg
-spec/fixtures/manifests/
-spec/fixtures/modules/
-.bundle/
+spec/fixtures

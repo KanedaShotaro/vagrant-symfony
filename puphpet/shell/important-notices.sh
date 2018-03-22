@@ -1,13 +1,11 @@
 #!/bin/bash
 
-export DEBIAN_FRONTEND=noninteractive
+VAGRANT_CORE_FOLDER=$(cat '/.puphpet-stuff/vagrant-core-folder.txt')
 
-PUPHPET_CORE_DIR=/opt/puphpet
-PUPHPET_STATE_DIR=/opt/puphpet-state
-
-if [[ -f "${PUPHPET_STATE_DIR}/displayed-important-notices" ]]; then
+if [[ -f '/.puphpet-stuff/displayed-important-notices' ]]; then
     exit 0
 fi
 
-cat "${PUPHPET_CORE_DIR}/shell/ascii-art/important-notices.txt"
-touch "${PUPHPET_STATE_DIR}/displayed-important-notices"
+cat "${VAGRANT_CORE_FOLDER}/shell/ascii-art/important-notices.txt"
+
+touch '/.puphpet-stuff/displayed-important-notices'

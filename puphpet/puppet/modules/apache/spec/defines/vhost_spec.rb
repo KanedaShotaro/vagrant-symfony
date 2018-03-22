@@ -273,8 +273,6 @@ describe 'apache::vhost', :type => :define do
               'path'            => '/a',
               'url'             => 'http://backend-a/',
               'keywords'        => ['noquery', 'interpolate'],
-              'no_proxy_uris'       => ['/a/foo', '/a/bar'],
-              'no_proxy_uris_match' => ['/a/foomatch'],
               'reverse_cookies' => [
 								{
                   'path'          => '/a',
@@ -297,8 +295,6 @@ describe 'apache::vhost', :type => :define do
               'path'     => '/a',
               'url'      => 'http://backend-a/',
               'keywords' => ['noquery', 'interpolate'],
-              'no_proxy_uris'       => ['/a/foo', '/a/bar'],
-              'no_proxy_uris_match' => ['/a/foomatch'],
               'params'   => {
                       'retry'   => '0',
                       'timeout' => '5'
@@ -343,7 +339,6 @@ describe 'apache::vhost', :type => :define do
           'rewrite_base'                => '/',
           'rewrite_rule'                => '^index\.html$ welcome.html',
           'rewrite_cond'                => '%{HTTP_USER_AGENT} ^MSIE',
-          'rewrite_inherit'             => true,
           'setenv'                      => ['FOO=/bin/true'],
           'setenvif'                    => 'Request_URI "\.gif$" object_is_image=gif',
           'setenvifnocase'              => 'REMOTE_ADDR ^127.0.0.1 localhost=true',
@@ -363,9 +358,6 @@ describe 'apache::vhost', :type => :define do
           'wsgi_process_group'          => 'wsgi',
           'wsgi_script_aliases'         => {
             '/' => '/var/www/demo.wsgi'
-          },
-          'wsgi_script_aliases_match'   => {
-            '^/test/(^[/*)' => '/var/www/demo.wsgi'
           },
           'wsgi_pass_authorization'     => 'On',
           'custom_fragment'             => '#custom string',
@@ -392,9 +384,6 @@ describe 'apache::vhost', :type => :define do
           'passenger_pre_start'         => 'http://localhost/myapp',
           'passenger_high_performance'  => true,
           'passenger_user'              => 'sandbox',
-          'passenger_nodejs'            => '/usr/bin/node',
-          'passenger_sticky_sessions'   => true,
-          'passenger_startup_file'      => 'bin/www',
           'add_default_charset'         => 'UTF-8',
           'jk_mounts'                   => [
             { 'mount'   => '/*',     'worker' => 'tcnode1', },
@@ -454,7 +443,6 @@ describe 'apache::vhost', :type => :define do
       it { is_expected.to contain_class('apache::mod::fastcgi') }
       it { is_expected.to contain_class('apache::mod::headers') }
       it { is_expected.to contain_class('apache::mod::filter') }
-      it { is_expected.to contain_class('apache::mod::env') }
       it { is_expected.to contain_class('apache::mod::setenvif') }
       it { is_expected.to contain_concat('30-rspec.example.com.conf').with({
         'owner'   => 'root',
@@ -558,8 +546,6 @@ describe 'apache::vhost', :type => :define do
       it { is_expected.to contain_concat__fragment('rspec.example.com-rack') }
       it { is_expected.to contain_concat__fragment('rspec.example.com-redirect') }
       it { is_expected.to contain_concat__fragment('rspec.example.com-rewrite') }
-      it { is_expected.to contain_concat__fragment('rspec.example.com-rewrite').with(
-        :content => /^\s+RewriteOptions Inherit$/ ) }
       it { is_expected.to contain_concat__fragment('rspec.example.com-scriptalias') }
       it { is_expected.to contain_concat__fragment('rspec.example.com-serveralias') }
       it { is_expected.to contain_concat__fragment('rspec.example.com-setenv').with_content(
@@ -595,7 +581,6 @@ describe 'apache::vhost', :type => :define do
       it { is_expected.to contain_concat__fragment('rspec.example.com-allow_encoded_slashes') }
       it { is_expected.to contain_concat__fragment('rspec.example.com-passenger') }
       it { is_expected.to contain_concat__fragment('rspec.example.com-charsets') }
-      it { is_expected.to_not contain_concat__fragment('rspec.example.com-security') }
       it { is_expected.to contain_concat__fragment('rspec.example.com-file_footer') }
       it { is_expected.to contain_concat__fragment('rspec.example.com-jk_mounts').with(
         :content => /^\s+JkMount\s+\/\*\s+tcnode1$/)}
@@ -725,28 +710,6 @@ describe 'apache::vhost', :type => :define do
       it { is_expected.to_not contain_concat__fragment('NameVirtualHost *:80') }
     end
 
-    context 'modsec_audit_log' do
-      let :params do
-        {
-          'docroot'          => '/rspec/docroot',
-          'modsec_audit_log' => true,
-        }
-      end
-      it { is_expected.to compile }
-      it { is_expected.to contain_concat__fragment('rspec.example.com-security').with(
-        :content => /^\s*SecAuditLog "\/var\/log\/apache2\/rspec\.example\.com_security\.log"$/ ) }
-    end
-    context 'modsec_audit_log_file' do
-      let :params do
-        {
-          'docroot'               => '/rspec/docroot',
-          'modsec_audit_log_file' => 'foo.log',
-        }
-      end
-      it { is_expected.to compile }
-      it { is_expected.to contain_concat__fragment('rspec.example.com-security').with(
-        :content => /\s*SecAuditLog "\/var\/log\/apache2\/foo.log"$/ ) }
-    end
     context 'set only aliases' do
       let :params do
         {

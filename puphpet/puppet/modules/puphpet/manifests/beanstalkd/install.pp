@@ -1,4 +1,4 @@
-# == Class: puphpet::beanstalkd::install
+# == Class: puphpet::adminer::install
 #
 # Installs beanstalkd work queue.
 # If beanstalkd_console GUI chosen for install,

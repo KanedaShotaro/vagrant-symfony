@@ -13,36 +13,19 @@ define apache::mpm (
   $_path = "${lib_path}/${_lib}"
   $_id   = "mpm_${mpm}_module"
 
-  if $::osfamily == 'Suse' {
-    #mpms on Suse 12 don't use .so libraries so create a placeholder load file
-    if versioncmp($apache_version, '2.4') >= 0 {
-      file { "${mod_dir}/${mpm}.load":
-        ensure  => file,
-        path    => "${mod_dir}/${mpm}.load",
-        content => '',
-        require => [
-          Package['httpd'],
-          Exec["mkdir ${mod_dir}"],
-        ],
-        before  => File[$mod_dir],
-        notify  => Class['apache::service'],
-      }
+  if versioncmp($apache_version, '2.4') >= 0 {
+    file { "${mod_dir}/${mpm}.load":
+      ensure  => file,
+      path    => "${mod_dir}/${mpm}.load",
+      content => "LoadModule ${_id} ${_path}\n",
+      require => [
+        Package['httpd'],
+        Exec["mkdir ${mod_dir}"],
+      ],
+      before  => File[$mod_dir],
+      notify  => Class['apache::service'],
     }
-  } else {
-      if versioncmp($apache_version, '2.4') >= 0 {
-        file { "${mod_dir}/${mpm}.load":
-          ensure  => file,
-          path    => "${mod_dir}/${mpm}.load",
-          content => "LoadModule ${_id} ${_path}\n",
-          require => [
-            Package['httpd'],
-            Exec["mkdir ${mod_dir}"],
-          ],
-          before  => File[$mod_dir],
-          notify  => Class['apache::service'],
-        }
-      }
-    }
+  }
 
   case $::osfamily {
     'debian': {
@@ -83,18 +66,12 @@ define apache::mpm (
         }
       }
 
-      if $mpm == 'itk' and $::operatingsystem == 'Ubuntu' and $::operatingsystemrelease == '16.04' {
-        $packagename = 'libapache2-mpm-itk'
-      } else {
-        $packagename = "apache2-mpm-${mpm}"
-      }
-
       if versioncmp($apache_version, '2.4') < 0 or $mpm == 'itk' {
-        package { $packagename:
+        package { "apache2-mpm-${mpm}":
           ensure => present,
         }
         if $::apache::mod_enable_dir {
-          Package[$packagename] {
+          Package["apache2-mpm-${mpm}"] {
             before => File[$::apache::mod_enable_dir],
           }
         }
@@ -102,7 +79,7 @@ define apache::mpm (
     }
     'freebsd': {
       class { '::apache::package':
-        mpm_module => $mpm,
+        mpm_module => $mpm
       }
     }
     'gentoo': {
@@ -132,13 +109,15 @@ define apache::mpm (
         if $mpm == 'itk' {
           file { "${lib_path}/mod_mpm_itk.so":
             ensure => link,
-            target => "${lib_path}/mpm_itk.so",
+            target => "${lib_path}/mpm_itk.so"
           }
         }
       }
 
-      package { "apache2-${mpm}":
-        ensure => present,
+      if versioncmp($apache_version, '2.4') < 0 {
+        package { "apache2-${mpm}":
+          ensure => present,
+        }
       }
     }
     default: {

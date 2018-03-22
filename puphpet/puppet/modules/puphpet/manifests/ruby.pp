@@ -32,14 +32,13 @@ class puphpet::ruby {
   }
 
   exec { 'rvm rvmrc warning ignore all.rvmrcs':
-    command => "rvm rvmrc warning ignore all.rvmrcs && \
-      touch ${puphpet::params::puphpet_state_dir}/rvmrc",
-    creates => "${puphpet::params::puphpet_state_dir}/rvmrc",
+    command => 'rvm rvmrc warning ignore all.rvmrcs && touch /.puphpet-stuff/rvmrc',
+    creates => '/.puphpet-stuff/rvmrc',
     path    => '/bin:/usr/bin:/usr/local/bin:/usr/local/rvm/bin',
     require => Exec['system-rvm'],
   }
 
-  User <| title == $puphpet::params::ssh_username |> {
+  User <| title == $::ssh_username |> {
     groups +> 'rvm'
   }
 

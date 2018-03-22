@@ -3,8 +3,8 @@ vagrantfile:
     vm:
         provider:
             local:
-                box: puphpet/ubuntu1604-x64
-                box_url: 'false'
+                box: puphpet/ubuntu1404-x64
+                box_url: puphpet/ubuntu1404-x64
                 box_version: '0'
                 chosen_virtualizer: virtualbox
                 virtualizers:
@@ -19,17 +19,17 @@ vagrantfile:
                         check_guest_tools: 0
                         update_guest_tools: 0
                 machines:
-                    vflm_htu4y5eaw0mw:
+                    vflm_fb3l776c5rwv:
                         id: symfony
-                        hostname: symfony.puphpet
+                        hostname: symfony.local
                         network:
-                            private_network: 10.10.10.10
+                            private_network: 10.20.10.70
                             forwarded_port:
-                                vflmnfp_0tc4x8yx5g9n:
-                                    host: '6973'
+                                vflmnfp_c81da4yxekvw:
+                                    host: '5288'
                                     guest: '22'
-                        memory: '2048'
-                        cpus: '1'
+                        memory: '4000'
+                        cpus: '2'
         provision:
             puppet:
                 manifests_path: puphpet/puppet/manifests
@@ -40,9 +40,7 @@ vagrantfile:
                     - '--verbose'
                     - '--hiera_config /vagrant/puphpet/puppet/hiera.yaml'
         synced_folder:
-            vflsf_1v0bgct08cx5:
-                owner: www-data
-                group: www-data
+            vflsf_dyfm12jxzdgh:
                 source: ./
                 target: /var/www
                 sync_type: nfs
@@ -62,6 +60,8 @@ vagrantfile:
                         - .vagrant/
                         - .git/
                     auto: 'true'
+                owner: vagrant
+                group: www-data
         usable_port_range:
             start: 10200
             stop: 10500
@@ -86,9 +86,7 @@ vagrantfile:
         no_proxy: ''
 server:
     install: '1'
-    packages:
-        - vim
-        - htop
+    packages: {  }
 users_groups:
     install: '1'
     groups: {  }
@@ -100,17 +98,11 @@ locale:
         locales:
             - en_GB.UTF-8
             - en_US.UTF-8
+            - es_ES.UTF-8
         timezone: UTC
 firewall:
     install: '1'
     rules: {  }
-resolv:
-    install: '1'
-    nameservers:
-        - 8.8.8.8
-        - 8.8.4.4
-    domainname: ''
-    searchpath: {  }
 cron:
     install: '1'
     jobs: {  }
@@ -128,9 +120,9 @@ nginx:
     upstreams: {  }
     vhosts:
         nxv_7tbdpcnqoe9n:
-            server_name: awesome.dev
+            server_name: awesome.local
             server_aliases:
-                - www.awesome.dev
+                - www.awesome.local
             www_root: /var/www/awesome
             listen_port: '80'
             client_max_body_size: 1m
@@ -192,17 +184,20 @@ apache:
         - rewrite
     vhosts:
         av_t6u7q3jcdrvf:
-            servername: symfony.dev
+            servername: symfony.local
             docroot: /var/www/web
             port: '80'
+            setenv:
+                - 'APP_ENV dev'
+                - 'APP_DEBUG true'
             setenvif:
                 - 'Authorization "(.*)" HTTP_AUTHORIZATION=$1'
             custom_fragment: ''
             ssl: '0'
-            ssl_cert: LETSENCRYPT
-            ssl_key: LETSENCRYPT
-            ssl_chain: LETSENCRYPT
-            ssl_certs_dir: LETSENCRYPT
+            ssl_cert: ''
+            ssl_key: ''
+            ssl_chain: ''
+            ssl_certs_dir: ''
             ssl_protocol: ''
             ssl_cipher: ''
             directories:
@@ -212,12 +207,6 @@ apache:
                         - Indexes
                         - FollowSymlinks
                         - MultiViews
-                    rewrite_engine:
-                        - On 
-                    rewrite_cond:
-                        - '%{HTTP:Authorization} ^(.*)'
-                    rewrite_rule:
-                        - '.* - [e=HTTP_AUTHORIZATION:%1]'
                     allow_override:
                         - All
                     require:
@@ -234,7 +223,6 @@ letsencrypt:
     install: '1'
     settings:
         email: ''
-        webserver_service: ''
     domains: {  }
 php:
     install: '1'
@@ -266,7 +254,6 @@ php:
         serialize_precision: '17'
         zend.enable_gc: 'On'
         expose_php: 'On'
-        allow_url_fopen: 'On'
         memory_limit: '-1'
         upload_max_filesize: 20M
     fpm_ini:

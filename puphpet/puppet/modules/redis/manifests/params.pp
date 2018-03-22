@@ -5,7 +5,6 @@
 class redis::params {
   # Generic
   $manage_repo = false
-  $manage_package = true
 
   # redis.conf.erb
   $activerehashing                 = true
@@ -38,13 +37,12 @@ class redis::params {
   $no_appendfsync_on_rewrite       = false
   $notify_keyspace_events          = undef
   $notify_service                  = true
+  $pid_file                        = '/var/run/redis/redis-server.pid'
   $port                            = 6379
   $rdbcompression                  = true
   $requirepass                     = undef
   $save_db_to_disk                 = true
-  $save_db_to_disk_interval        = {'900' =>'1', '300' => '10', '60' => '10000'}
   $sentinel_auth_pass              = undef
-  $sentinel_bind                   = undef
   $sentinel_config_file_mode       = '0644'
   $sentinel_config_group           = 'root'
   $sentinel_config_owner           = 'redis'
@@ -75,6 +73,7 @@ class redis::params {
   $ulimit                          = 65536
   $unixsocket                      = '/var/run/redis/redis.sock'
   $unixsocketperm                  = 755
+  $workdir                         = '/var/lib/redis/'
   $zset_max_ziplist_entries        = 128
   $zset_max_ziplist_value          = 64
 
@@ -109,7 +108,6 @@ class redis::params {
       $log_dir_mode              = '0755'
       $package_ensure            = 'present'
       $package_name              = 'redis-server'
-      $pid_file                  = '/var/run/redis/redis-server.pid'
       $sentinel_config_file      = '/etc/redis/redis-sentinel.conf'
       $sentinel_config_file_orig = '/etc/redis/redis-sentinel.conf.puppet'
       $sentinel_daemonize        = true
@@ -121,25 +119,10 @@ class redis::params {
       $service_ensure            = 'running'
       $service_group             = 'redis'
       $service_hasrestart        = true
-      $service_hasstatus         = true
+      $service_hasstatus         = false
       $service_name              = 'redis-server'
       $service_user              = 'redis'
       $ppa_repo                  = 'ppa:chris-lea/redis-server'
-      $workdir                   = '/var/lib/redis/'
-      $workdir_mode              = '0750'
-
-      case $::operatingsystem {
-        'Ubuntu': {
-          # Latest from PPA is 3.0.7
-          $minimum_version           = '3.0.7'
-        }
-        default: {
-          # Debian standard package is 2.4.14
-          # But we have dotdeb repo which is 3.2.5
-          $minimum_version           = '3.2.5'
-        }
-      }
-
     }
 
     'RedHat': {
@@ -154,7 +137,6 @@ class redis::params {
       $log_dir_mode              = '0755'
       $package_ensure            = 'present'
       $package_name              = 'redis'
-      $pid_file                  = '/var/run/redis/redis-server.pid'
       $sentinel_config_file      = '/etc/redis-sentinel.conf'
       $sentinel_config_file_orig = '/etc/redis-sentinel.conf.puppet'
       $sentinel_daemonize        = false
@@ -170,11 +152,6 @@ class redis::params {
       $service_name              = 'redis'
       $service_user              = 'redis'
       $ppa_repo                  = undef
-      $workdir                   = '/var/lib/redis/'
-      $workdir_mode              = '0750'
-
-      # EPEL package is 2.8.19
-      $minimum_version           = '2.8.19'
     }
 
     'FreeBSD': {
@@ -182,14 +159,12 @@ class redis::params {
       $config_dir_mode           = '0755'
       $config_file               = '/usr/local/etc/redis.conf'
       $config_file_mode          = '0644'
-      $config_file_orig          = '/usr/local/etc/redis.conf.puppet'
       $config_group              = 'wheel'
       $config_owner              = 'redis'
       $daemonize                 = true
       $log_dir_mode              = '0755'
       $package_ensure            = 'present'
       $package_name              = 'redis'
-      $pid_file                  = '/var/run/redis/redis.pid'
       $sentinel_config_file      = '/usr/local/etc/redis-sentinel.conf'
       $sentinel_config_file_orig = '/usr/local/etc/redis-sentinel.conf.puppet'
       $sentinel_daemonize        = true
@@ -205,11 +180,6 @@ class redis::params {
       $service_name              = 'redis'
       $service_user              = 'redis'
       $ppa_repo                  = undef
-      $workdir                   = '/var/db/redis/'
-      $workdir_mode              = '0750'
-
-      # pkg version
-      $minimum_version           = '3.2.4'
     }
 
     'Suse': {
@@ -223,7 +193,6 @@ class redis::params {
       $log_dir_mode              = '0750'
       $package_ensure            = 'present'
       $package_name              = 'redis'
-      $pid_file                  = '/var/run/redis/redis-server.pid'
       $sentinel_config_file      = '/etc/redis/redis-sentinel.conf'
       $sentinel_config_file_orig = '/etc/redis/redis-sentinel.conf.puppet'
       $sentinel_daemonize        = true
@@ -239,11 +208,6 @@ class redis::params {
       $service_name              = 'redis'
       $service_user              = 'redis'
       $ppa_repo                  = undef
-      $workdir                   = '/var/lib/redis/'
-      $workdir_mode              = '0750'
-
-      # suse package version
-      $minimum_version           = '3.0.5'
     }
 
     default: {
@@ -251,3 +215,4 @@ class redis::params {
     }
   }
 }
+

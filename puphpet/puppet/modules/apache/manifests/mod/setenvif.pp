@@ -1,5 +1,4 @@
 class apache::mod::setenvif {
-  include ::apache
   ::apache::mod { 'setenvif': }
   # Template uses no variables
   file { 'setenvif.conf':

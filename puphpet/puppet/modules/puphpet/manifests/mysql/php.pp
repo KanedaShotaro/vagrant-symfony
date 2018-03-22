@@ -28,4 +28,11 @@ class puphpet::mysql::php
     }
   }
 
+  if array_true($mysql, 'adminer')
+    and $php_package
+    and ! defined(Class['puphpet::adminer::install'])
+  {
+    class { 'puphpet::adminer::install': }
+  }
+
 }
